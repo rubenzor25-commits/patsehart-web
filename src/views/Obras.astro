@@ -1,0 +1,65 @@
+---
+import Base from '../layouts/Base.astro';
+import Card from '../components/Card.astro';
+import { obras } from '../data/obras';
+import { href, ui, type Lang } from '../i18n/ui';
+import { img } from '../lib/images';
+
+interface Props {
+  lang: Lang;
+  mode: 'all' | 'nueva';
+}
+const { lang, mode } = Astro.props;
+const t = ui[lang];
+const list = mode === 'nueva' ? obras.filter((o) => o.nueva) : obras;
+const title = mode === 'nueva' ? t.nuevaColeccion : t.nav.obras;
+---
+
+<Base lang={lang} route={mode === 'nueva' ? 'nueva' : 'obras'} title={title}>
+  <div class="container">
+    <h1 class="section-title">{title}</h1>
+    <nav class="tabs" aria-label={t.nav.obras}>
+      <a href={href(lang, 'obras')} aria-current={mode === 'all' ? 'page' : undefined}>{t.nav.todas}</a>
+      <a href={href(lang, 'nueva')} aria-current={mode === 'nueva' ? 'page' : undefined}>{t.nav.nueva}</a>
+    </nav>
+    <p class="intro">{t.noPriceNote}</p>
+    <div class="grid">
+      {
+        list.map((o, i) => (
+          <Card href={href(lang, 'obra', o.slug)} image={img(o.images[0])} title={o.title} eager={i < 3} />
+        ))
+      }
+    </div>
+  </div>
+</Base>
+
+<style>
+  .tabs {
+    display: flex;
+    justify-content: center;
+    gap: 28px;
+    margin: -24px 0 28px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+  }
+  @media (max-width: 520px) {
+    .tabs {
+      gap: 18px;
+      font-size: 10px;
+      letter-spacing: 0.18em;
+    }
+  }
+  .tabs a {
+    white-space: nowrap;
+    color: var(--muted);
+    padding-bottom: 4px;
+    border-bottom: 1px solid transparent;
+  }
+  .tabs a:hover,
+  .tabs a[aria-current='page'] {
+    color: var(--ink);
+    border-bottom-color: var(--ink);
+  }
+</style>

@@ -1,0 +1,75 @@
+---
+import Icon from './Icon.astro';
+import { site } from '../data/site';
+
+interface Props {
+  variant: 'rail' | 'inline';
+}
+const { variant } = Astro.props;
+const links = [
+  { name: 'mail' as const, href: `mailto:${site.email}`, label: 'Email' },
+  ...(site.pinterest ? [{ name: 'pinterest' as const, href: site.pinterest, label: 'Pinterest' }] : []),
+  { name: 'instagram' as const, href: site.instagram, label: 'Instagram' },
+];
+---
+
+<ul class:list={['social', `social--${variant}`]}>
+  {
+    links.map((l) => (
+      <li>
+        <a
+          href={l.href}
+          aria-label={l.label}
+          {...(l.name !== 'mail' ? { target: '_blank', rel: 'noopener' } : {})}
+        >
+          <Icon name={l.name} size={variant === 'rail' ? 15 : 18} />
+        </a>
+      </li>
+    ))
+  }
+</ul>
+
+<style>
+  .social {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+  }
+  .social a {
+    display: inline-flex;
+    padding: 4px;
+    color: var(--ink);
+    transition: opacity 0.2s ease;
+  }
+  .social a:hover {
+    opacity: 0.55;
+  }
+
+  /* Barra fija de la izquierda del boceto: línea vertical + iconos */
+  .social--rail {
+    position: fixed;
+    left: clamp(14px, 2vw, 30px);
+    bottom: 12vh;
+    z-index: 30;
+    flex-direction: column;
+    gap: 2px;
+    padding-left: 16px;
+    border-left: 1.5px solid #fff;
+    /* Se invierte sobre fondos oscuros (portada negra) y claros */
+    mix-blend-mode: difference;
+  }
+  .social--rail a {
+    color: #fff;
+  }
+  @media (max-width: 1080px) {
+    .social--rail {
+      display: none;
+    }
+  }
+
+  .social--inline {
+    gap: 14px;
+    justify-content: center;
+  }
+</style>

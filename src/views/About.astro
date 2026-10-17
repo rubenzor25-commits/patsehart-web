@@ -1,0 +1,77 @@
+---
+import { Picture } from 'astro:assets';
+import Base from '../layouts/Base.astro';
+import { site } from '../data/site';
+import { href, ui, type Lang } from '../i18n/ui';
+import { img } from '../lib/images';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = ui[lang];
+const photo = img('site/about.jpg');
+---
+
+<Base lang={lang} route="about" title={t.aboutTitle} description={t.about[0]} image={photo}>
+  <div class="container">
+    <h1 class="section-title">{t.aboutTitle}</h1>
+    <div class="about">
+      <div class="about__media">
+        <Picture
+          src={photo}
+          alt={site.name}
+          formats={['webp']}
+      fallbackFormat="webp"
+          widths={[400, 640, 900]}
+          sizes="(min-width: 900px) 40vw, 90vw"
+          loading="eager"
+          fetchpriority="high"
+        />
+      </div>
+      <div class="about__text">
+        {t.about.map((p) => <p>{p}</p>)}
+        <div class="about__links">
+          <a class="btn" href={href(lang, 'exposiciones')}>{t.exposTitle}</a>
+          <a class="btn" href={site.instagram} target="_blank" rel="noopener">Instagram</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</Base>
+
+<style>
+  .about {
+    display: grid;
+    gap: 36px;
+    align-items: center;
+  }
+  @media (min-width: 900px) {
+    .about {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: clamp(40px, 6vw, 96px);
+    }
+  }
+  .about__media {
+    max-width: 520px;
+    width: 100%;
+    margin-inline: auto;
+  }
+  .about__text {
+    text-align: center;
+    font-size: clamp(16px, 1.5vw, 18px);
+    line-height: 1.7;
+    max-width: 480px;
+    margin-inline: auto;
+  }
+  .about__text p {
+    margin: 0 0 16px;
+  }
+  .about__links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 28px;
+  }
+</style>

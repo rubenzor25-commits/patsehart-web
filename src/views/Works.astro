@@ -1,0 +1,22 @@
+---
+import Base from '../layouts/Base.astro';
+import Card from '../components/Card.astro';
+import { href, ui, type Lang } from '../i18n/ui';
+import { img } from '../lib/images';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = ui[lang];
+---
+
+<Base lang={lang} route="works" title={t.worksTitle}>
+  <div class="container">
+    <h1 class="section-title">{t.worksTitle}</h1>
+    <div class="grid grid--two">
+      <Card href={href(lang, 'exposiciones')} image={img('site/works-exposiciones.jpg')} title={t.exposTitle} eager sizes="(min-width: 960px) 420px, 46vw" />
+      <Card href={href(lang, 'vendidas')} image={img('site/works-vendidas.jpg')} title={t.vendidasTitle} eager sizes="(min-width: 960px) 420px, 46vw" />
+    </div>
+  </div>
+</Base>

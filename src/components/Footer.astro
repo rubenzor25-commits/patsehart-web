@@ -1,0 +1,62 @@
+---
+import Social from './Social.astro';
+import { site } from '../data/site';
+import { href, ui, type Lang } from '../i18n/ui';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = ui[lang];
+const year = new Date().getFullYear();
+---
+
+<footer class="footer">
+  <Social variant="inline" />
+  <a class="footer__domain" href={href(lang, 'home')}>{site.domain}</a>
+  <p class="footer__links">
+    <a href={href(lang, 'contact')}>{t.nav.contact}</a>
+    <span aria-hidden="true">·</span>
+    <a href={`mailto:${site.email}`}>{site.email}</a>
+    <span aria-hidden="true">·</span>
+    <a href={site.instagram} target="_blank" rel="noopener">{site.instagramHandle}</a>
+  </p>
+  <p class="footer__rights">© {year} {site.studio}. {t.footerRights}</p>
+</footer>
+
+<style>
+  .footer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 40px var(--gutter) 36px;
+    text-align: center;
+    border-top: 1px solid #f0f0f0;
+  }
+  .footer__domain {
+    font-size: 15px;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+  }
+  .footer__links {
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px 10px;
+    font-size: 13px;
+    color: var(--ink-soft);
+    overflow-wrap: anywhere;
+  }
+  .footer__links a:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .footer__rights {
+    margin: 0;
+    font-size: 11px;
+    color: var(--muted);
+    max-width: 520px;
+  }
+</style>

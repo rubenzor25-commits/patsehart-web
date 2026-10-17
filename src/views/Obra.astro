@@ -1,0 +1,86 @@
+---
+import Base from '../layouts/Base.astro';
+import Card from '../components/Card.astro';
+import Detail from '../components/Detail.astro';
+import RequestButton from '../components/RequestButton.astro';
+import { obras, similares, type Obra } from '../data/obras';
+import { site } from '../data/site';
+import { href, ui, type Lang } from '../i18n/ui';
+import { img } from '../lib/images';
+import { workLines } from '../lib/format';
+
+interface Props {
+  lang: Lang;
+  obra: Obra;
+}
+const { lang, obra } = Astro.props;
+const t = ui[lang];
+const i = obras.indexOf(obra);
+const prev = obras[i - 1];
+const next = obras[i + 1];
+const images = obra.images.map(img);
+const lines = workLines(lang, obra);
+const related = similares(obra);
+const url = new URL(href(lang, 'obra', obra.slug), Astro.site).href;
+---
+
+<Base
+  lang={lang}
+  route="obra"
+  slug={obra.slug}
+  title={obra.title}
+  description={`${obra.title} — ${[...lines].join(' ')} ${t.noPriceNote}`}
+  image={images[0]}
+  jsonLd={{
+    '@context': 'https://schema.org',
+    '@type': 'VisualArtwork',
+    name: obra.title,
+    url,
+    ...(obra.technique ? { artMedium: obra.technique[lang] } : {}),
+    ...(obra.sizes?.[0] ? { size: obra.sizes.join(', ') } : {}),
+    creator: { '@type': 'Person', name: site.name, sameAs: [site.instagram] },
+  }}
+>
+  <Detail
+    lang={lang}
+    section={t.nav.obras}
+    crumbs={[
+      { href: href(lang, 'home'), label: t.nav.home },
+      { href: href(lang, 'obras'), label: t.nav.obras },
+    ]}
+    images={images}
+    title={obra.title}
+    lines={lines}
+    prev={prev && { href: href(lang, 'obra', prev.slug), label: prev.title }}
+    next={next && { href: href(lang, 'obra', next.slug), label: next.title }}
+  >
+    <RequestButton
+      slot="actions"
+      lang={lang}
+      work={obra.title}
+      label={t.sendRequest}
+      prefill={t.form.workPrefill(obra.title)}
+    />
+    <p slot="note" class="price-note">{t.priceOnRequest}</p>
+
+    <section class="similares">
+      <h2 class="section-title">{t.similares}</h2>
+      <div class="grid">
+        {related.map((o) => <Card href={href(lang, 'obra', o.slug)} image={img(o.images[0])} title={o.title} />)}
+      </div>
+    </section>
+  </Detail>
+</Base>
+
+<style>
+  .price-note {
+    margin: 14px 0 0;
+    font-size: 12px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .similares {
+    margin-top: clamp(56px, 9vw, 110px);
+  }
+</style>

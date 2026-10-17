@@ -1,0 +1,89 @@
+---
+import { Picture } from 'astro:assets';
+import Base from '../layouts/Base.astro';
+import { exposiciones } from '../data/works';
+import { ui, type Lang } from '../i18n/ui';
+import { img } from '../lib/images';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = ui[lang];
+---
+
+<Base lang={lang} route="exposiciones" title={t.exposTitle} image={img(exposiciones[0].image)}>
+  <div class="container">
+    <h1 class="section-title">{t.worksTitle} - {t.exposTitle}</h1>
+    {
+      exposiciones.map((e, i) => (
+        <article class:list={['expo', 'reveal', { 'expo--flip': i % 2 === 1 }]} id={e.id}>
+          <div class="expo__media">
+            <Picture
+              src={img(e.image)}
+              alt={`${e.title} — ${e.place[lang]}`}
+              formats={['webp']}
+      fallbackFormat="webp"
+              widths={[400, 640, 900]}
+              sizes="(min-width: 900px) 34vw, 80vw"
+              loading={i === 0 ? 'eager' : 'lazy'}
+            />
+          </div>
+          <div class="expo__text">
+            <p class="expo__place">{e.place[lang]}</p>
+            <h2 class="expo__title">{e.title}</h2>
+            <p>{e.text[lang]}</p>
+          </div>
+        </article>
+      ))
+    }
+  </div>
+</Base>
+
+<style>
+  .expo {
+    display: grid;
+    gap: 28px;
+    align-items: center;
+    margin-bottom: clamp(56px, 9vw, 112px);
+  }
+  @media (min-width: 900px) {
+    .expo {
+      grid-template-columns: minmax(0, 0.9fr) minmax(0, 1fr);
+      gap: clamp(40px, 6vw, 96px);
+    }
+    .expo--flip .expo__media {
+      order: 2;
+    }
+  }
+  .expo__media {
+    max-width: 440px;
+    width: 100%;
+    margin-inline: auto;
+  }
+  .expo__text {
+    text-align: center;
+    max-width: 440px;
+    margin-inline: auto;
+  }
+  .expo__place {
+    margin: 0 0 18px;
+    font-family: var(--font-display);
+    font-size: clamp(18px, 2.4vw, 24px);
+    letter-spacing: 0.5em;
+    padding-left: 0.5em;
+    text-transform: uppercase;
+  }
+  .expo__title {
+    margin: 0 0 22px;
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: clamp(15px, 1.8vw, 19px);
+    letter-spacing: 0.3em;
+    padding-left: 0.3em;
+    text-transform: uppercase;
+  }
+  .expo__text p:last-child {
+    margin: 0;
+  }
+</style>

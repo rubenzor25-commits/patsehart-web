@@ -1,0 +1,195 @@
+---
+import { site } from '../data/site';
+import { ui, type Lang } from '../i18n/ui';
+
+interface Props {
+  lang: Lang;
+  /** Nombre de la obra/prenda por la que se pregunta (vacío en el formulario general). */
+  work?: string;
+  /** Texto con el que empieza el mensaje. */
+  prefill?: string;
+  subject?: string;
+  id: string;
+}
+const { lang, work = '', prefill = '', subject, id } = Astro.props;
+const f = ui[lang].form;
+const finalSubject = subject ?? (work ? `${f.subjectWork}: ${work}` : f.subjectGeneral);
+---
+
+<form
+  class="rform"
+  data-request-form
+  data-endpoint={site.formEndpoint}
+  data-email={site.email}
+  data-subject={finalSubject}
+  data-work={work}
+  data-label-work={f.workField}
+  data-sending={f.sending}
+  novalidate
+>
+  <div class="rform__row">
+    <div class="rform__field">
+      <label for={`${id}-name`}>{f.name} *</label>
+      <input id={`${id}-name`} name="nombre" type="text" autocomplete="given-name" required />
+    </div>
+    <div class="rform__field">
+      <label for={`${id}-last`}>{f.lastName} *</label>
+      <input id={`${id}-last`} name="apellidos" type="text" autocomplete="family-name" required />
+    </div>
+  </div>
+  <div class="rform__field">
+    <label for={`${id}-email`}>{f.email} *</label>
+    <input id={`${id}-email`} name="email" type="email" autocomplete="email" required />
+  </div>
+  <div class="rform__field">
+    <label for={`${id}-msg`}>{work ? f.messageWork : f.message}</label>
+    <textarea id={`${id}-msg`} name="mensaje" rows="4">{prefill}</textarea>
+  </div>
+  <input type="text" name="_honey" class="visually-hidden" tabindex="-1" autocomplete="off" aria-hidden="true" />
+  <button class="btn rform__send" type="submit">{f.send}</button>
+  <div class="rform__status" role="status" aria-live="polite">
+    <p class="rform__ok" hidden>{f.ok}</p>
+    <div class="rform__error" hidden>
+      <p>{f.error}</p>
+      <a class="btn rform__mailto" href={`mailto:${site.email}`}>{f.openMail}</a>
+    </div>
+    <p class="rform__invalid" hidden>{f.required}</p>
+  </div>
+</form>
+
+<script>
+  type Fields = { nombre: string; apellidos: string; email: string; mensaje: string };
+
+  const mailto = (to: string, subject: string, body: string) =>
+    `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+
+  document.querySelectorAll<HTMLFormElement>('form[data-request-form]').forEach((form) => {
+    const send = form.querySelector<HTMLButtonElement>('.rform__send')!;
+    const ok = form.querySelector<HTMLElement>('.rform__ok')!;
+    const err = form.querySelector<HTMLElement>('.rform__error')!;
+    const invalid = form.querySelector<HTMLElement>('.rform__invalid')!;
+    const mailLink = form.querySelector<HTMLAnchorElement>('.rform__mailto')!;
+    const sendLabel = send.textContent ?? '';
+    const d = form.dataset;
+
+    form.addEventListener('submit', async (ev) => {
+      ev.preventDefault();
+      ok.hidden = err.hidden = invalid.hidden = true;
+      if (!form.checkValidity()) {
+        invalid.hidden = false;
+        form.querySelector<HTMLInputElement>(':invalid')?.focus();
+        return;
+      }
+      const data = Object.fromEntries(new FormData(form)) as unknown as Fields & { _honey: string };
+      if (data._honey) return; // bot
+
+      const fullName = `${data.nombre} ${data.apellidos}`.trim();
+      const body = [
+        d.work ? `${d.labelWork}: ${d.work}` : '',
+        data.mensaje,
+        '',
+        `— ${fullName} (${data.email})`,
+      ]
+        .filter((l, i) => l !== '' || i > 1)
+        .join('\n');
+      mailLink.href = mailto(d.email!, d.subject!, body);
+
+      send.disabled = true;
+      send.textContent = d.sending ?? '…';
+      try {
+        const res = await fetch(d.endpoint!, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+          body: JSON.stringify({
+            nombre: fullName,
+            email: data.email,
+            ...(d.work ? { obra: d.work } : {}),
+            mensaje: data.mensaje,
+            _subject: d.subject,
+            _replyto: data.email,
+            _template: 'table',
+            _captcha: 'false',
+          }),
+        });
+        const json = await res.json().catch(() => ({}));
+        if (!res.ok || String(json.success) !== 'true') throw new Error(json.message ?? res.statusText);
+        form.reset();
+        ok.hidden = false;
+      } catch {
+        err.hidden = false;
+      } finally {
+        send.disabled = false;
+        send.textContent = sendLabel;
+      }
+    });
+  });
+</script>
+
+<style>
+  .rform {
+    display: grid;
+    gap: 22px;
+    width: 100%;
+  }
+  .rform__row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 22px;
+  }
+  @media (max-width: 520px) {
+    .rform__row {
+      grid-template-columns: 1fr;
+    }
+  }
+  .rform__field {
+    display: grid;
+    gap: 6px;
+  }
+  .rform label {
+    font-size: 14px;
+    color: var(--ink-soft);
+  }
+  .rform input,
+  .rform textarea {
+    width: 100%;
+    padding: 8px 0;
+    border: 0;
+    border-bottom: 1px solid var(--ink);
+    border-radius: 0;
+    background: transparent;
+    font-size: 16px;
+    resize: vertical;
+  }
+  .rform input:focus,
+  .rform textarea:focus {
+    outline: none;
+    border-bottom-width: 2px;
+  }
+  .rform__send {
+    justify-self: start;
+    min-width: 160px;
+  }
+  .rform__send:disabled {
+    opacity: 0.5;
+    cursor: progress;
+  }
+  .rform__status p {
+    margin: 0;
+    font-size: 14px;
+  }
+  .rform__ok {
+    color: #1f6b3a;
+  }
+  .rform__error {
+    display: grid;
+    gap: 12px;
+    justify-items: start;
+    font-size: 14px;
+  }
+  .rform__error[hidden] {
+    display: none;
+  }
+  .rform__invalid {
+    color: #9b2c2c;
+  }
+</style>

@@ -1,0 +1,326 @@
+---
+import Icon from './Icon.astro';
+import { asset, href, ui, type Lang, type RouteKey } from '../i18n/ui';
+
+interface Props {
+  lang: Lang;
+  current: RouteKey;
+  altHref: string;
+}
+const { lang, current, altHref } = Astro.props;
+const t = ui[lang];
+const other: Lang = lang === 'es' ? 'en' : 'es';
+
+const obrasKeys: RouteKey[] = ['obras', 'nueva', 'obra'];
+const worksKeys: RouteKey[] = ['works', 'exposiciones', 'vendidas', 'vendida'];
+const clothesKeys: RouteKey[] = ['clothes', 'prenda'];
+const is = (keys: RouteKey[]) => keys.includes(current);
+
+const nav = [
+  { label: t.nav.home, href: href(lang, 'home'), active: current === 'home' },
+  {
+    label: t.nav.obras,
+    href: href(lang, 'obras'),
+    active: is(obrasKeys),
+    children: [
+      { label: t.nav.nueva, href: href(lang, 'nueva') },
+      { label: t.nav.todas, href: href(lang, 'obras') },
+    ],
+  },
+  {
+    label: t.nav.works,
+    href: href(lang, 'works'),
+    active: is(worksKeys),
+    children: [
+      { label: t.nav.exposiciones, href: href(lang, 'exposiciones') },
+      { label: t.nav.vendidas, href: href(lang, 'vendidas') },
+    ],
+  },
+  { label: t.nav.clothes, href: href(lang, 'clothes'), active: is(clothesKeys) },
+  { label: t.nav.prints, href: href(lang, 'prints'), active: current === 'prints' },
+  { label: t.nav.about, href: href(lang, 'about'), active: current === 'about' },
+  { label: t.nav.contact, href: href(lang, 'contact'), active: current === 'contact' },
+];
+---
+
+<header class="header">
+  <div class="header__inner">
+    <a class="header__logo" href={href(lang, 'home')} aria-label="Pat Sehart Art Studio — Home">
+      <img src={asset('logo.svg')} alt="Pat Sehart Art Studio" width="300" height="100" />
+    </a>
+
+    <nav class="nav" aria-label={t.nav.menu}>
+      <ul class="nav__list">
+        {
+          nav.map((item) => (
+            <li class:list={['nav__item', { 'has-children': item.children }]}>
+              <a
+                href={item.href}
+                class:list={['nav__link', { 'is-active': item.active }]}
+                aria-current={item.active ? 'page' : undefined}
+              >
+                {item.label}
+              </a>
+              {item.children && (
+                <ul class="nav__sub">
+                  {item.children.map((c) => (
+                    <li>
+                      <a href={c.href}>{c.label}</a>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+
+    <div class="header__lang">
+      <span class="is-current" aria-current="true">{t.langName}</span>
+      <a href={altHref} hreflang={other} lang={other}>{ui[other].langName}</a>
+    </div>
+
+    <button class="header__toggle" type="button" aria-expanded="false" aria-controls="mobile-menu">
+      <span class="visually-hidden">{t.nav.menu}</span>
+      <Icon name="menu" size={26} />
+    </button>
+  </div>
+
+  <div class="mobile" id="mobile-menu" hidden>
+    <button class="mobile__close" type="button">
+      <span class="visually-hidden">{t.nav.close}</span>
+      <Icon name="close" size={26} />
+    </button>
+    <ul class="mobile__list">
+      {
+        nav.map((item) => (
+          <li>
+            <a href={item.href} class:list={{ 'is-active': item.active }}>
+              {item.label}
+            </a>
+            {item.children && (
+              <ul class="mobile__sub">
+                {item.children.map((c) => (
+                  <li>
+                    <a href={c.href}>{c.label}</a>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </li>
+        ))
+      }
+    </ul>
+    <div class="mobile__lang">
+      <span>{t.langName}</span>
+      <span aria-hidden="true">|</span>
+      <a href={altHref} hreflang={other} lang={other}>{ui[other].langName}</a>
+    </div>
+  </div>
+</header>
+
+<script>
+  const toggle = document.querySelector<HTMLButtonElement>('.header__toggle');
+  const menu = document.getElementById('mobile-menu');
+  const close = document.querySelector<HTMLButtonElement>('.mobile__close');
+  const setOpen = (open: boolean) => {
+    if (!toggle || !menu) return;
+    toggle.setAttribute('aria-expanded', String(open));
+    menu.hidden = !open;
+    document.documentElement.style.overflow = open ? 'hidden' : '';
+    if (open) close?.focus();
+    else toggle.focus();
+  };
+  toggle?.addEventListener('click', () => setOpen(true));
+  close?.addEventListener('click', () => setOpen(false));
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && menu && !menu.hidden) setOpen(false);
+  });
+</script>
+
+<style>
+  .header {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    /* Fondo sólido: un backdrop-filter aquí rompería el menú móvil (position: fixed) */
+    background: #fff;
+  }
+  .header__inner {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    height: var(--header-h);
+    padding-inline: clamp(12px, 2.4vw, 32px);
+  }
+  .header__logo {
+    flex: 0 0 auto;
+    display: block;
+    width: clamp(118px, 12vw, 150px);
+  }
+  .header__logo img {
+    width: 100%;
+    height: auto;
+  }
+
+  .nav {
+    margin-left: auto;
+  }
+  .nav__list {
+    display: flex;
+    gap: clamp(14px, 2.2vw, 40px);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .nav__item {
+    position: relative;
+  }
+  .nav__link,
+  .nav__sub a {
+    font-family: var(--font-body);
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 0.34em;
+    white-space: nowrap;
+  }
+  .nav__link {
+    display: inline-block;
+    padding: 10px 0;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.2s ease;
+  }
+  .nav__link:hover,
+  .nav__link.is-active {
+    border-bottom-color: var(--ink);
+  }
+  .nav__sub {
+    position: absolute;
+    top: 100%;
+    left: -14px;
+    min-width: 190px;
+    margin: 0;
+    padding: 10px 0 10px 14px;
+    list-style: none;
+    border-left: 1px solid var(--ink);
+    background: #fff;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-4px);
+    transition:
+      opacity 0.2s ease,
+      transform 0.2s ease,
+      visibility 0.2s;
+  }
+  .nav__sub a {
+    display: block;
+    padding: 6px 0;
+    font-weight: 500;
+    color: var(--ink-soft);
+  }
+  .nav__sub a:hover {
+    color: var(--ink);
+  }
+  .has-children:hover .nav__sub,
+  .has-children:focus-within .nav__sub {
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+  }
+
+  .header__lang {
+    display: flex;
+    gap: 14px;
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    font-weight: 600;
+  }
+  .header__lang a {
+    color: var(--muted);
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+  .header__lang a:hover {
+    color: var(--ink);
+  }
+
+  .header__toggle {
+    display: none;
+    margin-left: auto;
+    border: 0;
+    background: none;
+    padding: 8px;
+    cursor: pointer;
+  }
+
+  .mobile {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    background: #fff;
+    padding: 88px 28px 40px;
+    overflow-y: auto;
+  }
+  .mobile__close {
+    position: absolute;
+    top: 24px;
+    right: 18px;
+    border: 0;
+    background: none;
+    padding: 8px;
+    cursor: pointer;
+  }
+  .mobile__list,
+  .mobile__sub {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .mobile__list > li {
+    margin-bottom: 18px;
+  }
+  .mobile__list > li > a {
+    font-family: var(--font-display);
+    font-size: 18px;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+  }
+  .mobile__list > li > a.is-active {
+    border-bottom: 1px solid var(--ink);
+  }
+  .mobile__sub {
+    margin-top: 8px;
+    padding-left: 14px;
+    border-left: 1px solid var(--ink);
+  }
+  .mobile__sub a {
+    display: block;
+    padding: 4px 0;
+    font-size: 14px;
+    letter-spacing: 0.2em;
+    color: var(--ink-soft);
+  }
+  .mobile__lang {
+    display: flex;
+    gap: 12px;
+    margin-top: 36px;
+    font-size: 13px;
+    letter-spacing: 0.14em;
+    font-weight: 600;
+  }
+  .mobile__lang a {
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+
+  @media (max-width: 1080px) {
+    .nav,
+    .header__lang {
+      display: none;
+    }
+    .header__toggle {
+      display: inline-flex;
+    }
+  }
+</style>

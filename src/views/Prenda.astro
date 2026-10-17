@@ -1,0 +1,49 @@
+---
+import Base from '../layouts/Base.astro';
+import Detail from '../components/Detail.astro';
+import RequestButton from '../components/RequestButton.astro';
+import { prendas, prendaTexts, type Prenda } from '../data/works';
+import { href, ui, type Lang } from '../i18n/ui';
+import { img } from '../lib/images';
+
+interface Props {
+  lang: Lang;
+  prenda: Prenda;
+}
+const { lang, prenda } = Astro.props;
+const t = ui[lang];
+const i = prendas.indexOf(prenda);
+const prev = prendas[i - 1];
+const next = prendas[i + 1];
+const images = prenda.images.map(img);
+const kind = prendaTexts[prenda.kind];
+const fullTitle = `${prenda.title} ${kind.label[lang]}`;
+---
+
+<Base lang={lang} route="prenda" slug={prenda.slug} title={fullTitle} description={kind.text[lang]} image={images[0]}>
+  <Detail
+    lang={lang}
+    section={kind.label[lang]}
+    crumbs={[
+      { href: href(lang, 'home'), label: t.nav.home },
+      { href: href(lang, 'clothes'), label: t.nav.clothes },
+    ]}
+    images={images}
+    title={prenda.title}
+    lines={prenda.size ? [`${t.size} ${prenda.size}`] : []}
+    prev={prev && { href: href(lang, 'prenda', prev.slug), label: prev.title }}
+    next={next && { href: href(lang, 'prenda', next.slug), label: next.title }}
+  >
+    <RequestButton slot="actions" lang={lang} work={fullTitle} label={t.sendRequest} prefill={t.form.workPrefill(fullTitle)} />
+    <p slot="note" class="prenda-text">{kind.text[lang]}</p>
+  </Detail>
+</Base>
+
+<style>
+  .prenda-text {
+    max-width: 380px;
+    margin: 36px 0 0;
+    font-size: 15px;
+    line-height: 1.55;
+  }
+</style>

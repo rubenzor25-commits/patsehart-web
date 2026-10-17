@@ -1,0 +1,27 @@
+---
+import Base from '../layouts/Base.astro';
+import Card from '../components/Card.astro';
+import { vendidas } from '../data/works';
+import { href, ui, type Lang } from '../i18n/ui';
+import { img } from '../lib/images';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = ui[lang];
+---
+
+<Base lang={lang} route="vendidas" title={t.vendidasTitle}>
+  <div class="container">
+    <h1 class="section-title">{t.vendidasTitle}</h1>
+    <p class="intro">{t.vendidasIntro}</p>
+    <div class="grid">
+      {
+        vendidas.map((v, i) => (
+          <Card href={href(lang, 'vendida', v.slug)} image={img(v.image)} title={v.title} badge={t.soldLabel} eager={i < 3} />
+        ))
+      }
+    </div>
+  </div>
+</Base>

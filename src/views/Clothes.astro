@@ -1,0 +1,33 @@
+---
+import Base from '../layouts/Base.astro';
+import Card from '../components/Card.astro';
+import { prendas, prendaTexts } from '../data/works';
+import { href, ui, type Lang } from '../i18n/ui';
+import { img } from '../lib/images';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = ui[lang];
+---
+
+<Base lang={lang} route="clothes" title={t.nav.clothes} image={img('site/home-dress.jpg')}>
+  <div class="container">
+    <h1 class="section-title">{t.nav.clothes}</h1>
+    <p class="intro">{t.clothesIntro}</p>
+    <div class="grid">
+      {
+        prendas.map((p, i) => (
+          <Card
+            href={href(lang, 'prenda', p.slug)}
+            image={img(p.images[0])}
+            title={p.title}
+            meta={[prendaTexts[p.kind].label[lang], p.size].filter(Boolean).join(' · ')}
+            eager={i < 3}
+          />
+        ))
+      }
+    </div>
+  </div>
+</Base>

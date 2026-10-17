@@ -1,0 +1,87 @@
+---
+import { Picture } from 'astro:assets';
+import Base from '../layouts/Base.astro';
+import Icon from '../components/Icon.astro';
+import RequestForm from '../components/RequestForm.astro';
+import { site } from '../data/site';
+import { ui, type Lang } from '../i18n/ui';
+import { img } from '../lib/images';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = ui[lang];
+---
+
+<Base lang={lang} route="contact" title={t.contactTitle} description={t.contactText}>
+  <div class="container">
+    <h1 class="section-title">{t.contactTitle}</h1>
+    <div class="contact__intro">
+      <p>{t.contactText}</p>
+      <p class="contact__mail">
+        <Icon name="mail" size={16} />
+        <span>{t.contactMail}</span>
+      </p>
+      <p><a class="contact__email" href={`mailto:${site.email}`}>{site.email}</a></p>
+    </div>
+    <div class="contact">
+      <div class="contact__form">
+        <RequestForm lang={lang} id="contact" />
+      </div>
+      <div class="contact__media">
+        <Picture
+          src={img('site/contact.jpg')}
+          alt={site.name}
+          formats={['webp']}
+      fallbackFormat="webp"
+          widths={[360, 540, 760]}
+          sizes="(min-width: 900px) 30vw, 80vw"
+        />
+      </div>
+    </div>
+  </div>
+</Base>
+
+<style>
+  .contact__intro {
+    max-width: 720px;
+    margin: 0 auto clamp(36px, 6vw, 64px);
+    text-align: center;
+  }
+  .contact__intro p {
+    margin: 0 0 10px;
+  }
+  .contact__mail {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .contact__email {
+    font-size: 15px;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    overflow-wrap: anywhere;
+  }
+  .contact {
+    display: grid;
+    gap: 48px;
+    align-items: center;
+  }
+  @media (min-width: 900px) {
+    .contact {
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+      gap: clamp(48px, 7vw, 110px);
+    }
+  }
+  .contact__form {
+    max-width: 520px;
+    width: 100%;
+    margin-inline: auto;
+  }
+  .contact__media {
+    max-width: 360px;
+    width: 100%;
+    margin-inline: auto;
+  }
+</style>

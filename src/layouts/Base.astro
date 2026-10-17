@@ -1,0 +1,104 @@
+---
+import '@fontsource/montserrat/300.css';
+import '@fontsource/montserrat/400.css';
+import '@fontsource/montserrat/500.css';
+import '@fontsource/quicksand/400.css';
+import '@fontsource/quicksand/500.css';
+import '@fontsource/quicksand/600.css';
+import '@fontsource/quicksand/700.css';
+import '../styles/global.css';
+
+import { getImage } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import Social from '../components/Social.astro';
+import { asset, href, ui, type Lang, type RouteKey } from '../i18n/ui';
+import { site } from '../data/site';
+import { img } from '../lib/images';
+
+interface Props {
+  lang: Lang;
+  /** Sección actual (marca el menú y construye el enlace al otro idioma). */
+  route: RouteKey;
+  slug?: string;
+  title?: string;
+  description?: string;
+  image?: ImageMetadata;
+  jsonLd?: Record<string, unknown>;
+}
+
+const { lang, route, slug = '', title, description, image, jsonLd } = Astro.props;
+const t = ui[lang];
+const other: Lang = lang === 'es' ? 'en' : 'es';
+const fullTitle = title ? `${title} | ${site.studio}` : `${site.studio} — ${t.tagline}`;
+const desc = description ?? t.metaDescription;
+const canonical = new URL(href(lang, route, slug), Astro.site).href;
+const altUrl = new URL(href(other, route, slug), Astro.site).href;
+const altHref = href(other, route, slug);
+const og = await getImage({ src: image ?? img('site/hero.jpg'), width: 1200, format: 'jpg' });
+const ogUrl = new URL(og.src, Astro.site).href;
+---
+
+<!doctype html>
+<html lang={t.htmlLang}>
+  <head>
+    <meta charset="utf-8" />
+    <script is:inline>document.documentElement.classList.add('js');</script>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={desc} />
+    <link rel="canonical" href={canonical} />
+    <link rel="alternate" hreflang={lang} href={canonical} />
+    <link rel="alternate" hreflang={other} href={altUrl} />
+    <link rel="alternate" hreflang="x-default" href={new URL(href('es', route, slug), Astro.site).href} />
+    <link rel="icon" href={asset('favicon.svg')} type="image/svg+xml" />
+    <link rel="icon" href={asset('favicon-32.png')} sizes="32x32" type="image/png" />
+    <link rel="apple-touch-icon" href={asset('apple-touch-icon.png')} />
+    <meta name="theme-color" content="#ffffff" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={site.studio} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={desc} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogUrl} />
+    <meta property="og:locale" content={lang === 'es' ? 'es_ES' : 'en_GB'} />
+    <meta name="twitter:card" content="summary_large_image" />
+    {jsonLd && <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />}
+  </head>
+  <body>
+    <a class="skip-link" href="#main">{t.skip}</a>
+    <Header lang={lang} current={route} altHref={altHref} />
+    <Social variant="rail" />
+    <main id="main">
+      <slot />
+    </main>
+    <Footer lang={lang} />
+
+    <script>
+      // Aparición suave de los bloques al hacer scroll (lo que ya se ve al cargar aparece al momento)
+      const els = [...document.querySelectorAll('.reveal')];
+      const show = (el: Element) => el.classList.add('is-visible');
+      if (!('IntersectionObserver' in window)) {
+        els.forEach(show);
+      } else {
+        const io = new IntersectionObserver(
+          (entries) => {
+            for (const e of entries) {
+              if (e.isIntersecting) {
+                show(e.target);
+                io.unobserve(e.target);
+              }
+            }
+          },
+          { rootMargin: '0px 0px -6% 0px' },
+        );
+        for (const el of els) {
+          if (el.getBoundingClientRect().top < window.innerHeight) show(el);
+          else io.observe(el);
+        }
+      }
+    </script>
+  </body>
+</html>

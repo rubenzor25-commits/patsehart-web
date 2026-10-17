@@ -1,0 +1,10 @@
+---
+import type { GetStaticPaths } from 'astro';
+import View from '../../../../views/Vendida.astro';
+import { vendidas } from '../../../../data/works';
+
+export const getStaticPaths = (() => vendidas.map((item) => ({ params: { slug: item.slug }, props: { item } }))) satisfies GetStaticPaths;
+const { item } = Astro.props;
+---
+
+<View lang="en" obra={item} />

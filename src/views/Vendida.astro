@@ -1,0 +1,46 @@
+---
+import Base from '../layouts/Base.astro';
+import Detail from '../components/Detail.astro';
+import RequestButton from '../components/RequestButton.astro';
+import { vendidas, type Vendida } from '../data/works';
+import { href, ui, type Lang } from '../i18n/ui';
+import { img } from '../lib/images';
+import { workLines } from '../lib/format';
+
+interface Props {
+  lang: Lang;
+  obra: Vendida;
+}
+const { lang, obra } = Astro.props;
+const t = ui[lang];
+const i = vendidas.indexOf(obra);
+const prev = vendidas[i - 1];
+const next = vendidas[i + 1];
+const image = img(obra.image);
+---
+
+<Base lang={lang} route="vendida" slug={obra.slug} title={`${obra.title} (${t.soldLabel})`} image={image}>
+  <Detail
+    lang={lang}
+    section={t.vendidasTitle}
+    crumbs={[
+      { href: href(lang, 'works'), label: t.nav.works },
+      { href: href(lang, 'vendidas'), label: t.vendidasTitle },
+    ]}
+    images={[image]}
+    title={obra.title}
+    subtitle={obra.subtitle?.[lang]}
+    lines={workLines(lang, obra)}
+    badge={t.soldLabel}
+    prev={prev && { href: href(lang, 'vendida', prev.slug), label: prev.title }}
+    next={next && { href: href(lang, 'vendida', next.slug), label: next.title }}
+  >
+    <RequestButton
+      slot="actions"
+      lang={lang}
+      work={obra.title}
+      label={t.similarRequest}
+      prefill={t.form.similarPrefill(obra.title)}
+    />
+  </Detail>
+</Base>

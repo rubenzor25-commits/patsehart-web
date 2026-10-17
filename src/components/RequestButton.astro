@@ -1,0 +1,89 @@
+---
+import Icon from './Icon.astro';
+import RequestForm from './RequestForm.astro';
+import { ui, type Lang } from '../i18n/ui';
+
+interface Props {
+  lang: Lang;
+  work: string;
+  label: string;
+  prefill: string;
+  /** Texto pequeño que acompaña al formulario dentro del diálogo. */
+  note?: string;
+}
+const { lang, work, label, prefill, note } = Astro.props;
+const t = ui[lang];
+const id = `req-${work.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
+---
+
+<div class="request" data-request>
+  <button type="button" class="pill request__open">{label}</button>
+  <dialog class="request__dialog" aria-labelledby={`${id}-title`}>
+    <button type="button" class="request__close" aria-label={t.nav.close}>
+      <Icon name="close" size={24} />
+    </button>
+    <p class="request__kicker">{label}</p>
+    <h2 class="request__title" id={`${id}-title`}>{work}</h2>
+    <p class="request__note">{note ?? t.requestIntro}</p>
+    <RequestForm lang={lang} work={work} prefill={prefill} id={id} />
+  </dialog>
+</div>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-request]').forEach((r) => {
+    const dialog = r.querySelector<HTMLDialogElement>('dialog')!;
+    r.querySelector('.request__open')!.addEventListener('click', () => {
+      dialog.showModal();
+      dialog.querySelector<HTMLInputElement>('input')?.focus();
+    });
+    r.querySelector('.request__close')!.addEventListener('click', () => dialog.close());
+    dialog.addEventListener('click', (e) => {
+      if (e.target === dialog) dialog.close();
+    });
+  });
+</script>
+
+<style>
+  .request__dialog {
+    width: min(560px, calc(100vw - 32px));
+    max-height: calc(100dvh - 32px);
+    padding: clamp(28px, 5vw, 44px);
+    border: 1px solid var(--ink);
+    background: #fff;
+    overflow-y: auto;
+    text-align: left;
+  }
+  .request__dialog::backdrop {
+    background: rgba(255, 255, 255, 0.82);
+    backdrop-filter: blur(3px);
+  }
+  .request__close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    border: 0;
+    background: none;
+    padding: 8px;
+    cursor: pointer;
+  }
+  .request__kicker {
+    margin: 0;
+    font-size: 12px;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .request__title {
+    margin: 6px 0 8px;
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: 22px;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+  }
+  .request__note {
+    margin: 0 0 24px;
+    font-size: 14px;
+    color: var(--ink-soft);
+  }
+</style>

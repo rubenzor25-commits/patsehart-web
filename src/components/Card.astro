@@ -1,0 +1,41 @@
+---
+import { Picture } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+
+interface Props {
+  href: string;
+  image: ImageMetadata;
+  title: string;
+  meta?: string;
+  badge?: string;
+  eager?: boolean;
+  sizes?: string;
+}
+const {
+  href,
+  image,
+  title,
+  meta,
+  badge,
+  eager = false,
+  sizes = '(min-width: 960px) 30vw, 46vw',
+} = Astro.props;
+---
+
+<a class="card reveal" href={href}>
+  <div class="card__media">
+    <Picture
+      src={image}
+      alt={title}
+      formats={['webp']}
+      fallbackFormat="webp"
+      widths={[320, 480, 640, 900]}
+      sizes={sizes}
+      loading={eager ? 'eager' : 'lazy'}
+      fetchpriority={eager ? 'high' : 'auto'}
+    />
+    {badge && <span class="badge">{badge}</span>}
+  </div>
+  <h3 class="card__title">{title}</h3>
+  {meta && <p class="card__meta">{meta}</p>}
+</a>
